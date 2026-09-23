@@ -8,9 +8,16 @@ function Home() {
     const [task, setTask] = useState([])
     const [filter, setFilter] = useState("all");
     useEffect(()=>{
-       const ts = localStorage.setItem("items",JSON.stringify(task))
+       localStorage.setItem("tasks",JSON.stringify(task))
     },[task])
-    // console.log({ts}.getItem("items"))
+    const taskStore = localStorage.getItem("tasks")
+    useEffect(()=>{
+        if(taskStore){
+            setTask(JSON.parse(taskStore))
+        }
+    },[])
+    console.log(task.length)
+    // console.log("items are:", taskStore)
     function addTask() {
         if (inputs.trim() === "" || input.trim() === "") return;
         const newTask = {
