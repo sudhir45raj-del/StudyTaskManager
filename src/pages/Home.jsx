@@ -19,7 +19,24 @@ function Home() {
     },[])
     // localStorage.removeItem("tasks")
     function addTask() {
-        if (inputs.trim() === "" || input.trim() === "") return;
+        if (inputs.trim() === "" || input.trim() === "" || input.length < 2 || inputs.length < 3 || input.length > 30 || inputs.length > 100){
+            if(input.length <= 0 || inputs.length <= 0){
+                alert("Please fill all fields")
+            }
+            else if(inputs.length < 3 ){
+               alert("Task must be atleast 3 characters")
+           }
+            else if(input.length < 2 ){
+                alert("Subject must be atleast 2 characters")
+            }
+            else if(inputs.length > 100 ){
+               alert("Task is too long")
+           }
+            else if(input.length > 30 ){
+                alert("Subject is too long")
+            }
+            return;}
+            console.log(inputs.length)
         const newTask = {
             id: Date.now(),
             title: inputs,
@@ -33,18 +50,26 @@ function Home() {
     };
     function deletetsk(id) {
         setTask(task.filter((item) => item.id !== id));
-        console.log("working")
     }
     function updateTask(){
         setTask(task.map((item)=> {
             if(item.id === editId){
-                return{...item, subject:(input), title:(inputs)}
+                return{...item, subject:(input), title:(inputs),duedate:(calendars.toDateString())}
             }
             return item
         }))
             setEditId(null)
             setinput("")
             setinputs("")
+            console.log(input)
+        }
+        function cancelTask(){
+            if(editId !== null){
+                setEditId(null)
+                setinput("")
+                setinputs("")
+                setCalendars(Date.now)
+        }
     }
     function handlecheck(id) {
         setTask(task.map((item) => {
@@ -69,9 +94,6 @@ function Home() {
                     item.checks === false)
             }
         })
-    console.log(editId)
-    console.log(inputs)
-    console.log(input)
     return (
         <div className="mt-12 mb-5">
             <h1>Study Task Manager</h1>
@@ -84,6 +106,8 @@ function Home() {
                     <Calendar value={calendars} onChange={setCalendars} />
                 </span>
                 <button className="bg-blue-800 text-white text-sm px-6 " onClick={addTask}>Add Task</button>
+                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId? "":"hidden"}`}onClick={updateTask}>Update</button>
+                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId? "":"hidden"}`}onClick={cancelTask}>Cancle</button>
                 <div>
                     <div className="flex justify-between mt-2 mb-2">
                         <button className="bg-blue-300 cursor-pointer px-4 rounded-sm" onClick={() => setFilter("all")}>All</button>
@@ -105,9 +129,8 @@ function Home() {
                                         <span className={`bg-green-200 ml-5 ${item.checks ? "line-through text-gray-500" : ""}`}>
                                             {item.duedate}
                                         </span>
-                                        <button className="bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={()=> {setEditId(item.id); setinputs(item.title); setinput(item.subject);}}>Edit</button>
+                                        <button className=" bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={()=> {setEditId(item.id); setinputs(item.title); setinput(item.subject); setCalendars(new Date(item.duedate))}}>Edit</button>
                                         <button className="bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={() => deletetsk(item.id)}>Delete</button>
-                                        <button className="bg-blue-800 text-white text-sm px-6 ml-4 " onClick={()=>updateTask(item.id)}>Update</button>
                                     </li>
                                 </ul>
                             )
