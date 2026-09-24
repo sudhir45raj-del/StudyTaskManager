@@ -7,6 +7,7 @@ function Home() {
     const [input, setinput] = useState("")
     const [task, setTask] = useState([])
     const [filter, setFilter] = useState("all");
+    const[editId , setEditId] = useState(null);
     useEffect(()=>{
        localStorage.setItem("tasks",JSON.stringify(task))
     },[task])
@@ -16,8 +17,7 @@ function Home() {
             setTask(JSON.parse(taskStore))
         }
     },[])
-    console.log(task.length)
-    // console.log("items are:", taskStore)
+    // localStorage.removeItem("tasks")
     function addTask() {
         if (inputs.trim() === "" || input.trim() === "") return;
         const newTask = {
@@ -28,10 +28,23 @@ function Home() {
             checks: false
         };
         setTask([...task, newTask])
+        setinputs("")
+        setinput("")
     };
     function deletetsk(id) {
         setTask(task.filter((item) => item.id !== id));
         console.log("working")
+    }
+    function updateTask(){
+        setTask(task.map((item)=> {
+            if(item.id === editId){
+                return{...item, subject:(input), title:(inputs)}
+            }
+            return item
+        }))
+            setEditId(null)
+            setinput("")
+            setinputs("")
     }
     function handlecheck(id) {
         setTask(task.map((item) => {
@@ -56,14 +69,16 @@ function Home() {
                     item.checks === false)
             }
         })
-    
+    console.log(editId)
+    console.log(inputs)
+    console.log(input)
     return (
         <div className="mt-12 mb-5">
             <h1>Study Task Manager</h1>
             <h2 className="font-bold" >Add New Task</h2>
             <div>
-                <input id="ts" className="border-2 pr-10" type="text" placeholder="Write Your Task" onChange={(e) => setinputs(e.target.value)} ></input>
-                <input id="sb" className=" ml-2" type="text" placeholder="Subject" onChange={(e) => setinput(e.target.value)} ></input>
+                <input id="ts" className="border-2 pr-10" type="text" placeholder="Write Your Task" value={inputs} onChange={(e) => setinputs(e.target.value)} ></input>
+                <input id="sb" className=" ml-2" type="text" placeholder="Subject" value={input} onChange={(e) => setinput(e.target.value)} ></input>
                 <span>
                     <h3>Due Date</h3>
                     <Calendar value={calendars} onChange={setCalendars} />
@@ -78,7 +93,7 @@ function Home() {
                     <div>
                         {filteredTask.map((item) => {
                             return (
-                                <ul>
+                                <ul key={item.id}>
                                     <li className="bg-red-500">
                                         <input className="cursor-pointer" type="checkbox" checked={item.checks} onChange={() => handlecheck(item.id)}></input>
                                         <span className={`bg-green-200 ${item.checks ? "line-through text-gray-500" : ""}`}>
@@ -90,7 +105,9 @@ function Home() {
                                         <span className={`bg-green-200 ml-5 ${item.checks ? "line-through text-gray-500" : ""}`}>
                                             {item.duedate}
                                         </span>
-                                        <button className="bg-blue-800 ml-5 mb-2 text-white font-bold" onClick={() => deletetsk(item.id)}>delete</button>
+                                        <button className="bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={()=> {setEditId(item.id); setinputs(item.title); setinput(item.subject);}}>Edit</button>
+                                        <button className="bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={() => deletetsk(item.id)}>Delete</button>
+                                        <button className="bg-blue-800 text-white text-sm px-6 ml-4 " onClick={()=>updateTask(item.id)}>Update</button>
                                     </li>
                                 </ul>
                             )
