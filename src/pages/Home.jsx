@@ -7,36 +7,38 @@ function Home() {
     const [input, setinput] = useState("")
     const [task, setTask] = useState([])
     const [filter, setFilter] = useState("all");
-    const[editId , setEditId] = useState(null);
-    useEffect(()=>{
-       localStorage.setItem("tasks",JSON.stringify(task))
-    },[task])
+    const [editId, setEditId] = useState(null);
+    useEffect(() => {
+        localStorage.setItem("tasks", JSON.stringify(task))
+    }, [task])
     const taskStore = localStorage.getItem("tasks")
+    // useEffect(() => {
+    //     if (taskStore) {
+    //         setTask(JSON.parse(taskStore))
+    //     }
+    // }, [])
     useEffect(()=>{
-        if(taskStore){
-            setTask(JSON.parse(taskStore))
-        }
+        loadTask()
     },[])
-    // localStorage.removeItem("tasks")
     function addTask() {
-        if (inputs.trim() === "" || input.trim() === "" || input.length < 2 || inputs.length < 3 || input.length > 30 || inputs.length > 100){
-            if(input.length <= 0 || inputs.length <= 0){
+        if (inputs.trim() === "" || input.trim() === "" || input.length < 2 || inputs.length < 3 || input.length > 30 || inputs.length > 100) {
+            if (input.length <= 0 || inputs.length <= 0) {
                 alert("Please fill all fields")
             }
-            else if(inputs.length < 3 ){
-               alert("Task must be atleast 3 characters")
-           }
-            else if(input.length < 2 ){
+            else if (inputs.length < 3) {
+                alert("Task must be atleast 3 characters")
+            }
+            else if (input.length < 2) {
                 alert("Subject must be atleast 2 characters")
             }
-            else if(inputs.length > 100 ){
-               alert("Task is too long")
-           }
-            else if(input.length > 30 ){
+            else if (inputs.length > 100) {
+                alert("Task is too long")
+            }
+            else if (input.length > 30) {
                 alert("Subject is too long")
             }
-            return;}
-            console.log(inputs.length)
+            return;
+        }
         const newTask = {
             id: Date.now(),
             title: inputs,
@@ -44,31 +46,137 @@ function Home() {
             duedate: calendars.toDateString(),
             checks: false
         };
-        setTask([...task, newTask])
+        postData(newTask)
         setinputs("")
         setinput("")
     };
-    function deletetsk(id) {
-        setTask(task.filter((item) => item.id !== id));
-    }
-    function updateTask(){
-        setTask(task.map((item)=> {
-            if(item.id === editId){
-                return{...item, subject:(input), title:(inputs),duedate:(calendars.toDateString())}
+    async function apiDelete(id){
+        try{
+
+            const data = await fetch(`https://jsonplaceholder.typicode.com/todos/${id}`,{
+                method: "DELETE",
+            })
+            if(!data.ok){
+                throw new Error("something went wrong")
             }
-            return item
-        }))
+            return true;
+        } catch(error){
+            console.log(error)
+            return false
+        }
+    }
+    async function deletetsk(id) {
+        const result = await apiDelete(id)
+        if( result){
+            setTask(previousTask =>{
+                return(
+                    previousTask.filter((item) => item.id !== id)
+                )
+            });
+        }
+        else{
+            alert("Failed to delete task. Please try again.")
+        }
+    }
+
+    async function apiUpdate(updatedData) {
+        try{
+            const data = await fetch(`https://jsonplaceholder.typicode.com/todos/${updatedData.id}`,{
+                method: "PATCH",
+                headers:{
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(updatedData)
+            })
+            if(!data.ok){
+                throw new Error("something went wrong")
+            }
+            return true
+        } catch(error){
+            console.log(error)
+            return false
+        }
+    }
+    async function updateTask() {
+        const Taskvalue = task.find((item)=>{
+            return(
+                item.id === editId
+            )
+        })
+        const updatedData = {
+        id: editId,
+        subject: input,
+        title: inputs,
+        duedate: calendars.toDateString(),
+        checks: Taskvalue.checks
+        }
+        const result = await apiUpdate(updatedData)
+        if(result){
+
+            setTask(previousTask => previousTask.map((item) => {
+                if (item.id === editId) {
+                    return { ...item, subject: (input), title: (inputs), duedate: (calendars.toDateString()) }
+                }
+                return item
+            }))
             setEditId(null)
             setinput("")
             setinputs("")
             console.log(input)
         }
-        function cancelTask(){
-            if(editId !== null){
-                setEditId(null)
-                setinput("")
-                setinputs("")
-                setCalendars(Date.now)
+        else{
+            alert("something went wrong")
+        }
+    }
+    function cancelTask() {
+        if (editId !== null) {
+            setEditId(null)
+            setinput("")
+            setinputs("")
+            setCalendars(Date.now)
+        }
+    }
+    async function loadTask() {
+        console.log("this is working")
+        const fetchts = await fetch("https://jsonplaceholder.typicode.com/todos")
+        const datats = await fetchts.json()
+        const convertedTask = datats.map((item) => {
+            return {
+                id: item.id,
+                title: item.title,
+                subject: "sample",
+                duedate: new Date().toDateString(),
+                checks: item.completed
+            }
+        })
+        setTask(convertedTask)
+    }
+    async function postData(newTask) {
+        try {
+            const apidata = await fetch("https://jsonplaceholder.typicode.com/todos", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(newTask)
+            }
+            )
+            if (!apidata.ok) {
+                throw new Error("somethingis wrong")
+            }
+            const datajson = await apidata.json()
+            console.log(datajson)
+            const convetedData = {
+                id: datajson.id,
+                title: datajson.title,
+                checks: datajson.completed,
+                subject: newTask.subject,
+                duedate: newTask.duedate
+            }
+            setTask((previousTask)=> [...previousTask,convetedData])
+        }
+        catch (error) {
+            console.log(error)
         }
     }
     function handlecheck(id) {
@@ -106,8 +214,10 @@ function Home() {
                     <Calendar value={calendars} onChange={setCalendars} />
                 </span>
                 <button className="bg-blue-800 text-white text-sm px-6 " onClick={addTask}>Add Task</button>
-                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId? "":"hidden"}`}onClick={updateTask}>Update</button>
-                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId? "":"hidden"}`}onClick={cancelTask}>Cancle</button>
+                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId ? "" : "hidden"}`} onClick={updateTask}>Update</button>
+                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId ? "" : "hidden"}`} onClick={cancelTask}>Cancle</button>
+                {/* <button className={`bg-blue-800 text-white text-sm px-6 ml-4 `} onClick={loadTask}>Load Sample Task</button> */}
+                {/* <button className={`bg-blue-800 text-white text-sm px-6 ml-4 `} onClick={() => postData(sendtask)}>Add data</button> */}
                 <div>
                     <div className="flex justify-between mt-2 mb-2">
                         <button className="bg-blue-300 cursor-pointer px-4 rounded-sm" onClick={() => setFilter("all")}>All</button>
@@ -129,7 +239,7 @@ function Home() {
                                         <span className={`bg-green-200 ml-5 ${item.checks ? "line-through text-gray-500" : ""}`}>
                                             {item.duedate}
                                         </span>
-                                        <button className=" bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={()=> {setEditId(item.id); setinputs(item.title); setinput(item.subject); setCalendars(new Date(item.duedate))}}>Edit</button>
+                                        <button className=" bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={() => { setEditId(item.id); setinputs(item.title); setinput(item.subject); setCalendars(new Date(item.duedate)) }}>Edit</button>
                                         <button className="bg-blue-800 cursor-pointer ml-5 px-4 mb-2 text-white font-bold" onClick={() => deletetsk(item.id)}>Delete</button>
                                     </li>
                                 </ul>
