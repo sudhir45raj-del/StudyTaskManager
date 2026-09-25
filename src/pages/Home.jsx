@@ -8,6 +8,7 @@ function Home() {
     const [task, setTask] = useState([])
     const [filter, setFilter] = useState("all");
     const [editId, setEditId] = useState(null);
+    const [isUpdated, setIsUpdated]= useState(false)
     useEffect(() => {
         localStorage.setItem("tasks", JSON.stringify(task))
     }, [task])
@@ -110,24 +111,30 @@ function Home() {
         duedate: calendars.toDateString(),
         checks: Taskvalue.checks
         }
-        const result = await apiUpdate(updatedData)
-        if(result){
+        try {
 
-            setTask(previousTask => previousTask.map((item) => {
-                if (item.id === editId) {
-                    return { ...item, subject: (input), title: (inputs), duedate: (calendars.toDateString()) }
-                }
-                return item
-            }))
-            setEditId(null)
-            setinput("")
-            setinputs("")
-            console.log(input)
+            setIsUpdated(true)
+            const result = await apiUpdate(updatedData)
+            if(result){
+                
+                setTask(previousTask => previousTask.map((item) => {
+                    if (item.id === editId) {
+                        return { ...item, subject: (input), title: (inputs), duedate: (calendars.toDateString()) }
+                    }
+                    return item
+                }))
+                setEditId(null)
+                setinput("")
+                setinputs("")
+                console.log(input)
+            }
+            else{
+                alert("something went wrong")
+            }
+        } finally{
+            setIsUpdated(false)
         }
-        else{
-            alert("something went wrong")
         }
-    }
     function cancelTask() {
         if (editId !== null) {
             setEditId(null)
@@ -214,10 +221,8 @@ function Home() {
                     <Calendar value={calendars} onChange={setCalendars} />
                 </span>
                 <button className="bg-blue-800 text-white text-sm px-6 " onClick={addTask}>Add Task</button>
-                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId ? "" : "hidden"}`} onClick={updateTask}>Update</button>
+                <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId ? "" : "hidden"} `} disabled = {isUpdated} onClick={updateTask}>{isUpdated ? "Updating...": "Update" }</button>
                 <button className={`bg-blue-800 text-white text-sm px-6 ml-4 ${editId ? "" : "hidden"}`} onClick={cancelTask}>Cancle</button>
-                {/* <button className={`bg-blue-800 text-white text-sm px-6 ml-4 `} onClick={loadTask}>Load Sample Task</button> */}
-                {/* <button className={`bg-blue-800 text-white text-sm px-6 ml-4 `} onClick={() => postData(sendtask)}>Add data</button> */}
                 <div>
                     <div className="flex justify-between mt-2 mb-2">
                         <button className="bg-blue-300 cursor-pointer px-4 rounded-sm" onClick={() => setFilter("all")}>All</button>
