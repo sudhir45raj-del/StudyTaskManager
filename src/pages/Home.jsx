@@ -13,24 +13,22 @@ function Home() {
     const [error, setError] = useState("")
     const [taskError, setTaskError] = useState("")
     const [subjectError, setSubjectError] = useState("")
-    const [isLoaded, setIsLoaded] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [order, setOrder] = useState("")
     const [currentpage, setcurrentpage] = useState(1)
     const [showCalendar, setShowCalendar] = useState(false)
+
     useEffect(() => {
-        if (isLoaded) {
-            localStorage.setItem("tasks", JSON.stringify(task))
-        }
-    }, [task, isLoaded])
-    useEffect(() => {
-        const taskStore = localStorage.getItem("tasks")
-        if (taskStore) {
-            const taskdata = JSON.parse(taskStore)
-            setTask(taskdata)
-        }
-        setIsLoaded(true)
-    }, [])
+        fetch("http://localhost:5000/api/tasks")
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data);
+                setTask(data);
+            });
+    }, []);
+
+
+
     function isValidTitle(title) {
         if (title.trim().length >= 3 && title.trim().length <= 100) {
             return true;
@@ -49,6 +47,7 @@ function Home() {
         }
     }
     async function addTask() {
+        console.log("1. addTask started");
         setTaskError("");
         setSubjectError("");
         const isTitleValid = isValidTitle(inputs)
@@ -79,11 +78,15 @@ function Home() {
             title: inputs,
             subject: input,
             duedate: calendars.toDateString(),
-            checks: false
+            checks: false,
+            completed: "pending"
         };
+        console.log("2. newTask:", newTask);
         try {
             setIsAdding(true)
+            console.log("3. calling postData");
             const result = await postData(newTask)
+            console.log("4. postData result:", result);
             if (result) {
                 setinputs("")
                 setinput("")
@@ -95,7 +98,7 @@ function Home() {
     async function apiDelete(id) {
         try {
 
-            const data = await fetch(`https://jsonplaceholder.typicode.com/todos/${id}`, {
+            const data = await fetch(`http://localhost:5000/api/tasks/${id}`, {
                 method: "DELETE",
             })
             if (!data.ok) {
@@ -122,9 +125,10 @@ function Home() {
     }
 
     async function apiUpdate(updatedData) {
+        console.log("apiUpdate called with updatedData:", updatedData);
         try {
-            const data = await fetch(`https://jsonplaceholder.typicode.com/todos/${updatedData.id}`, {
-                method: "PATCH",
+            const data = await fetch(`http://localhost:5000/api/tasks/${updatedData.id}`, {
+                method: "PUT",
                 headers: {
                     "Content-Type": "application/json"
                 },
@@ -198,8 +202,9 @@ function Home() {
         setTask(convertedTask)
     }
     async function postData(newTask) {
+        console.log("5. postData started");
         try {
-            const apidata = await fetch("https://jsonplaceholder.typicode.com/todos", {
+            const apidata = await fetch("http://localhost:5000/api/tasks", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -213,12 +218,13 @@ function Home() {
             const datajson = await apidata.json()
             console.log(datajson)
             const convetedData = {
-                id: newTask.id,
+                id: datajson.id,
                 title: datajson.title,
-                checks: datajson.completed,
+                checks: datajson.completed === "completed" ? true : false,
                 subject: newTask.subject,
                 duedate: newTask.duedate
             }
+            console.log("Converted task:", convetedData);
             setTask((previousTask) => [...previousTask, convetedData])
             return true
         }
@@ -227,14 +233,29 @@ function Home() {
             return false
         }
     }
-    function handlecheck(id) {
-        setTask(task.map((item) => {
-            if (item.id === id) {
-                return { ...item, checks: !item.checks }
+    async function handlecheck(id) {
+        const taskToUpdate = task.find((item) => {
+            return item.id === id;
+        });
+        if (taskToUpdate) {
+            const newChecks = !taskToUpdate.checks;
+            const updatedTask = {
+                id: taskToUpdate.id,
+                title: taskToUpdate.title,
+                subject: taskToUpdate.subject,
+                duedate: taskToUpdate.duedate,
+                checks: newChecks
+            };
+            const result = await apiUpdate(updatedTask);
+            if (result) {
+                setTask((previousTask) =>
+                    previousTask.map((item) =>
+                        item.id === id ? { ...item, checks: newChecks } : item
+                    )
+                );
             }
-            return item
-        }))
-    }
+}
+}
 
     function getTaskStatus(item) {
         if (!item || !item.duedate) {
@@ -416,7 +437,7 @@ function Home() {
                                 </div>
                                 <button
                                     className="rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-sm font-medium text-cyan-300 transition hover:bg-cyan-500/20"
-                                    onClick={() => setShowCalendar(prev => !prev)}
+                                    type="button" onClick={() => setShowCalendar(prev => !prev)}
                                 >
                                     {showCalendar ? "Hide Calendar" : "Choose Due Date"}
                                 </button>
@@ -449,7 +470,7 @@ function Home() {
 
                             <button
                                 className={`rounded-xl border border-slate-700 px-6 py-3 font-semibold text-slate-300 transition hover:bg-slate-800 ${editId ? "" : "hidden"}`}
-                                onClick={cancelTask}
+                                type="button" onClick={cancelTask}
                             >
                                 Cancel
                             </button>
@@ -622,11 +643,11 @@ function Home() {
 
                                             <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                                                 <p className={`rounded-full px-3 py-1 text-xs font-semibold ${status === "due soon" ? "bg-amber-400/10 text-amber-300" :
-                                                        status === "invalid date" ? "bg-orange-400/10 text-orange-300" :
-                                                            status === "completed" ? "bg-emerald-400/10 text-emerald-300" :
-                                                                status === "overdue" ? "bg-red-400/10 text-red-300" :
-                                                                    status === "today" ? "bg-yellow-400/10 text-yellow-300" :
-                                                                        "bg-cyan-400/10 text-cyan-300"
+                                                    status === "invalid date" ? "bg-orange-400/10 text-orange-300" :
+                                                        status === "completed" ? "bg-emerald-400/10 text-emerald-300" :
+                                                            status === "overdue" ? "bg-red-400/10 text-red-300" :
+                                                                status === "today" ? "bg-yellow-400/10 text-yellow-300" :
+                                                                    "bg-cyan-400/10 text-cyan-300"
                                                     }`}>
                                                     {status}
                                                 </p>
