@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import { getTasks } from "../api/tasks";
+import { postTasks } from "../api/tasks";
+import { deleteTasks } from "../api/tasks";
+import { updateTasks } from "../api/tasks";
 function Home() {
     const [calendars, setCalendars] = useState(new Date())
     const [inputs, setinputs] = useState("")
@@ -17,18 +21,25 @@ function Home() {
     const [order, setOrder] = useState("")
     const [currentpage, setcurrentpage] = useState(1)
     const [showCalendar, setShowCalendar] = useState(false)
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        fetch("http://localhost:5000/api/tasks")
-            .then((response) => response.json())
-            .then((data) => {
-                console.log(data);
-                setTask(data);
-            });
-    }, []);
+        fetchTasks();
+    }, [])
 
-
-
+    async function fetchTasks() {
+        setError("");
+        try {
+            const data = await getTasks();
+            setTask(data);
+        } catch (error) {
+            console.error("Error fetching tasks:", error);
+            setError("Failed to fetch tasks. Please try again later.");
+        }
+        finally {
+            setIsLoading(false);
+        }
+    }
     function isValidTitle(title) {
         if (title.trim().length >= 3 && title.trim().length <= 100) {
             return true;
@@ -79,7 +90,6 @@ function Home() {
             subject: input,
             duedate: calendars.toDateString(),
             checks: false,
-            completed: "pending"
         };
         console.log("2. newTask:", newTask);
         try {
@@ -95,23 +105,8 @@ function Home() {
             setIsAdding(false)
         }
     };
-    async function apiDelete(id) {
-        try {
-
-            const data = await fetch(`http://localhost:5000/api/tasks/${id}`, {
-                method: "DELETE",
-            })
-            if (!data.ok) {
-                throw new Error("something went wrong")
-            }
-            return true;
-        } catch (error) {
-            console.log(error)
-            return false
-        }
-    }
     async function deletetsk(id) {
-        const result = await apiDelete(id)
+        const result = await deleteTasks(id)
         if (result) {
             setTask(previousTask => {
                 return (
@@ -121,26 +116,6 @@ function Home() {
         }
         else {
             alert("Failed to delete task. Please try again.")
-        }
-    }
-
-    async function apiUpdate(updatedData) {
-        console.log("apiUpdate called with updatedData:", updatedData);
-        try {
-            const data = await fetch(`http://localhost:5000/api/tasks/${updatedData.id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(updatedData)
-            })
-            if (!data.ok) {
-                throw new Error("something went wrong")
-            }
-            return true
-        } catch (error) {
-            setError(error.message)
-            return false
         }
     }
     async function updateTask() {
@@ -158,9 +133,8 @@ function Home() {
             checks: Taskvalue.checks
         }
         try {
-
             setIsUpdated(true)
-            const result = await apiUpdate(updatedData)
+            const result = await updateTasks(updatedData)
             if (result) {
 
                 setTask(previousTask => previousTask.map((item) => {
@@ -186,50 +160,16 @@ function Home() {
             setCalendars(Date.now)
         }
     }
-    async function loadTask() {
-        console.log("this is working")
-        const fetchts = await fetch("https://jsonplaceholder.typicode.com/todos")
-        const datats = await fetchts.json()
-        const convertedTask = datats.map((item) => {
-            return {
-                id: item.id,
-                title: item.title,
-                subject: "sample",
-                duedate: new Date().toDateString(),
-                checks: item.completed
-            }
-        })
-        setTask(convertedTask)
-    }
     async function postData(newTask) {
         console.log("5. postData started");
         try {
-            const apidata = await fetch("http://localhost:5000/api/tasks", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(newTask)
-            }
-            )
-            if (!apidata.ok) {
-                throw new Error("somethingis wrong")
-            }
-            const datajson = await apidata.json()
-            console.log(datajson)
-            const convetedData = {
-                id: datajson.id,
-                title: datajson.title,
-                checks: datajson.completed === "completed" ? true : false,
-                subject: newTask.subject,
-                duedate: newTask.duedate
-            }
-            console.log("Converted task:", convetedData);
-            setTask((previousTask) => [...previousTask, convetedData])
-            return true
+            const datajson = await postTasks(newTask);
+            console.log("Post task result:", datajson);
+            setTask((previousTask) => [...previousTask, datajson]);
+            return true;
         }
         catch (error) {
-            console.log(error)
+            console.log(error.message)
             return false
         }
     }
@@ -254,8 +194,8 @@ function Home() {
                     )
                 );
             }
-}
-}
+        }
+    }
 
     function getTaskStatus(item) {
         if (!item || !item.duedate) {
@@ -608,7 +548,15 @@ function Home() {
 
                     {/* Task List */}
                     <div className="space-y-3">
-                        {currentTasks.length === 0 ? (
+                        {error ? (
+                            <div className="rounded-xl border border-dashed border-red-500 px-4 py-12 text-center">
+                                <p className="font-medium text-red-400">{error}</p>
+                            </div>
+                        ) : isLoading ? (
+                            <div className="rounded-xl border border-dashed border-slate-700 px-4 py-12 text-center">
+                                <p className="font-medium text-slate-300">Loading tasks...</p>
+                            </div>
+                        ) : currentTasks.length === 0 ? (
                             <div className="rounded-xl border border-dashed border-slate-700 px-4 py-12 text-center">
                                 <p className="font-medium text-slate-300">No tasks found</p>
                                 <p className="mt-1 text-sm text-slate-500">
