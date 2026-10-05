@@ -5,6 +5,7 @@ import { getTasks } from "../api/tasks";
 import { postTasks } from "../api/tasks";
 import { deleteTasks } from "../api/tasks";
 import { updateTasks } from "../api/tasks";
+
 function Home() {
     const [calendars, setCalendars] = useState(new Date())
     const [inputs, setinputs] = useState("")
@@ -22,6 +23,7 @@ function Home() {
     const [currentpage, setcurrentpage] = useState(1)
     const [showCalendar, setShowCalendar] = useState(false)
     const [isLoading, setIsLoading] = useState(true);
+    const [isDeleting, setIsDeleting] = useState(false);
 
     useEffect(() => {
         fetchTasks();
@@ -106,16 +108,24 @@ function Home() {
         }
     };
     async function deletetsk(id) {
-        const result = await deleteTasks(id)
-        if (result) {
-            setTask(previousTask => {
-                return (
-                    previousTask.filter((item) => item.id !== id)
-                )
-            });
+        try{
+            setIsDeleting(true)
+            const result = await deleteTasks(id)
+            if (result) {
+                setTask(previousTask => {
+                    return (
+                        previousTask.filter((item) => item.id !== id)
+                    )
+                });
+            }
+            else {
+                setError("Failed to delete task. Please try again.")
+            }
+        } catch (error) {
+            setError("Error deleting task: " + error.message);
         }
-        else {
-            alert("Failed to delete task. Please try again.")
+        finally {
+            setIsDeleting(false) 
         }
     }
     async function updateTask() {
@@ -148,7 +158,10 @@ function Home() {
                 setinputs("")
                 console.log(input)
             }
-        } finally {
+        }  catch (error) {
+           setError("Error updating task: " + error.message);
+            } 
+        finally {
             setIsUpdated(false)
         }
     }
@@ -186,7 +199,7 @@ function Home() {
                 duedate: taskToUpdate.duedate,
                 checks: newChecks
             };
-            const result = await apiUpdate(updatedTask);
+            const result = await updateTasks(updatedTask);
             if (result) {
                 setTask((previousTask) =>
                     previousTask.map((item) =>
@@ -614,9 +627,9 @@ function Home() {
 
                                                 <button
                                                     className="rounded-lg border border-red-500/30 px-3 py-2 text-sm font-medium text-red-300 transition hover:bg-red-500/10"
-                                                    onClick={() => deletetsk(item.id)}
+                                                    onClick={() => deletetsk(item.id)} disabled={isDeleting}
                                                 >
-                                                    Delete
+                                                    {isDeleting ? "Deleting..." : "Delete"} 
                                                 </button>
                                             </div>
                                         </li>

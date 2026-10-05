@@ -1,8 +1,13 @@
 import {API_URL} from "./config";
 
 export async function getTasks() {
-    try{ 
-    const response = await fetch(`${API_URL}/tasks`);
+    try{
+    const token = localStorage.getItem("token");
+    const response = await fetch(`${API_URL}/tasks`, {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    });
     if(!response.ok){
         throw new Error("Failed to fetch tasks")
     }
@@ -12,12 +17,14 @@ export async function getTasks() {
     } catch(error){
         throw new Error("Error fetching tasks: " + error.message);
     }
-} 
+}
 export async function postTasks(taskData) {
     try{ 
+    const token = localStorage.getItem("token");
     const response = await fetch(`${API_URL}/tasks`, {
         method: "POST",
         headers: {
+            "Authorization": `Bearer ${token}`,
             "Content-Type": "application/json"
         },
         body: JSON.stringify(taskData)
