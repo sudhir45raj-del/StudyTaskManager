@@ -14,7 +14,6 @@ app.use(cors());
 app.use(express.json());
 
 app.get("/api/tasks", authMiddleware, async (req, res) => {
-    
     try {
     console.log(req.user);
     const tasks = await Task.find({user: req.user.id});
@@ -126,10 +125,10 @@ app.post("/api/auth/login", async (req, res) => {
     }
 });
 
-app.get("/api/tasks/:id", async (req, res) => {
+app.get("/api/tasks/:id", authMiddleware, async (req, res) => {
     try{ 
     const id = Number(req.params.id);
-    const task = await Task.findOne({id});
+    const task = await Task.findOne({user: req.user.id, id: id});
     if (!task) {
         return res.status(404).json("Task not found")
     }
@@ -141,10 +140,10 @@ catch(error){
 }
 });
 
-app.put("/api/tasks/:id", async (req, res) => {
+app.put("/api/tasks/:id", authMiddleware, async (req, res) => {
     try{ 
     const id = Number(req.params.id)
-    const task = await Task.findOne({id});
+    const task = await Task.findOne({user: req.user.id, id: id});
     if (!task) {
         return res.status(404).json("Task not found")
     }
@@ -159,10 +158,10 @@ app.put("/api/tasks/:id", async (req, res) => {
     res.status(500).json({message: "Error updating task"})
 }
 })
-app.delete("/api/tasks/:id" , async (req,res)=>{
+app.delete("/api/tasks/:id" , authMiddleware, async (req,res)=>{
     try{
     const id = Number(req.params.id)
-    const task = await Task.findOneAndDelete({id})
+    const task = await Task.findOneAndDelete({user: req.user.id, id: id});
     if(!task){
         return res.status(404).json("Task not found")
     }
@@ -172,6 +171,6 @@ app.delete("/api/tasks/:id" , async (req,res)=>{
     res.status(500).json({message: "Error deleting task"})
 }
 })
-app.listen(5000, () => {
+app.listen(process.env.PORT || 5000, () => {
     console.log("Server is running on port 5000");
 });

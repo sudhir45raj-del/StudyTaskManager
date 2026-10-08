@@ -8,6 +8,11 @@ export async function getTasks() {
             "Authorization": `Bearer ${token}`
         }
     });
+    if(response.status === 401){
+        const error = new Error()
+        error.status = response.status
+        throw error
+    }
     if(!response.ok){
         throw new Error("Failed to fetch tasks")
     }
@@ -15,7 +20,7 @@ export async function getTasks() {
     console.log(data);
     return data;
     } catch(error){
-        throw new Error("Error fetching tasks: " + error.message);
+        throw error
     }
 }
 export async function postTasks(taskData) {
@@ -36,27 +41,34 @@ export async function postTasks(taskData) {
     console.log(data);
     return data;
     } catch(error){
-        throw new Error("Error posting task: " + error.message);
+        throw error
     }
 } 
 export async function deleteTasks(id) {
     try{
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_URL}/tasks/${id}`, {
-            method: "DELETE"
+            method: "DELETE",
+            headers:{
+                "Authorization": `Bearer ${token}`,
+            }
         });
         if(!response.ok){
             throw new Error("Failed to delete task")
         }
         return true;
     }catch(error){
-        throw new Error("Error deleting task: " + error.message);
+        throw error
     }
 }
 export async function updateTasks(updatedData) {
     try{
+        const token = localStorage.getItem("token");
         const response = await fetch(`${API_URL}/tasks/${updatedData.id}`, {
             method: "PUT",
             headers: {
+                
+                "Authorization": `Bearer ${token}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(updatedData)
@@ -68,6 +80,6 @@ export async function updateTasks(updatedData) {
         console.log(data);
         return data;
     }catch(error){
-        throw new Error("Error updating task: " + error.message);
+        throw error
     }
 }

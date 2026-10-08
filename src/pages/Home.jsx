@@ -5,6 +5,7 @@ import { getTasks } from "../api/tasks";
 import { postTasks } from "../api/tasks";
 import { deleteTasks } from "../api/tasks";
 import { updateTasks } from "../api/tasks";
+import { useNavigate } from "react-router-dom";
 
 function Home() {
     const [calendars, setCalendars] = useState(new Date())
@@ -24,6 +25,7 @@ function Home() {
     const [showCalendar, setShowCalendar] = useState(false)
     const [isLoading, setIsLoading] = useState(true);
     const [isDeleting, setIsDeleting] = useState(false);
+    const navigate = useNavigate()
 
     useEffect(() => {
         fetchTasks();
@@ -31,12 +33,18 @@ function Home() {
 
     async function fetchTasks() {
         setError("");
+        const token = localStorage.getItem("token")
         try {
             const data = await getTasks();
             setTask(data);
         } catch (error) {
-            console.error("Error fetching tasks:", error);
-            setError("Failed to fetch tasks. Please try again later.");
+            if(error.status === 401){
+                localStorage.removeItem("token")
+                navigate('/login')
+            }else{
+                console.error("Error fetching tasks:", error);
+                setError("Failed to fetch tasks. Please try again later.");
+            }
         }
         finally {
             setIsLoading(false);
@@ -139,8 +147,7 @@ function Home() {
             id: editId,
             subject: input,
             title: inputs,
-            duedate: calendars.toDateString(),
-            checks: Taskvalue.checks
+            duedate: calendars.toDateString()
         }
         try {
             setIsUpdated(true)
@@ -199,16 +206,19 @@ function Home() {
                 duedate: taskToUpdate.duedate,
                 checks: newChecks
             };
-            const result = await updateTasks(updatedTask);
-            if (result) {
-                setTask((previousTask) =>
-                    previousTask.map((item) =>
-                        item.id === id ? { ...item, checks: newChecks } : item
-                    )
-                );
-            }
+            try{
+
+                const result = await updateTasks(updatedTask);
+                if (result) {
+                    setTask((previousTask) =>
+                        previousTask.map((item) =>
+                            item.id === id ? { ...item, checks: newChecks } : item
+                )
+            );
         }
-    }
+    } catch(error){
+        setError("Failed to update task completion status.")
+}}}
 
     function getTaskStatus(item) {
         if (!item || !item.duedate) {
