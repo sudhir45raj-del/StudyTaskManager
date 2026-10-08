@@ -1,4 +1,5 @@
 import React from 'react';
+import {API_URL} from "./config";
 import {useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 function Login() {
@@ -6,10 +7,10 @@ function Login() {
     const [password, setPassword] = useState('');
     const navigate = useNavigate()
     const [error, setError] = useState("");
-
+    
     const handleLogin = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/auth/login', {
+            const response = await fetch(`${API_URL}/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
