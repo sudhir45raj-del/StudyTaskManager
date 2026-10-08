@@ -1,5 +1,5 @@
 import React from 'react';
-import {API_URL} from "../config";
+import {API_URL} from "../api/config";
 import {useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 function Login() {
