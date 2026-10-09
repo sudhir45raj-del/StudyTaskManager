@@ -47,7 +47,7 @@ function Login() {
                 <button className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded" type="submit">Login</button>
             </form>
             <a href="#signUp">
-        <button id="signUp" className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded" type="submit">Sign Up</button></a>
+        <button id="signUp" className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded">Sign Up</button></a>
         </div>
     );
 }
