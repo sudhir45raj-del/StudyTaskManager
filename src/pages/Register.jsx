@@ -60,7 +60,7 @@ return (
           {error && (
             <p className="mt-2 text-sm text-red-400">{error}</p>
           )}
-        <button className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded" type="submit">Sign Up</button>
+        <button id="signUp" className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded" type="submit">Sign Up</button>
   </form>
 </div>
 );

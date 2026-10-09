@@ -2,6 +2,7 @@ import React from 'react';
 import {API_URL} from "../api/config";
 import {useState} from 'react';
 import { useNavigate } from 'react-router-dom';
+import Register from './Register';
 function Login() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -45,6 +46,8 @@ function Login() {
                 )}
                 <button className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded" type="submit">Login</button>
             </form>
+            <a href="#signUp">
+        <button id="signUp" className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-4 rounded" type="submit">Sign Up</button></a>
         </div>
     );
 }
