@@ -1,12 +1,14 @@
 import React from "react";
 import { useState } from "react";
 import Login from "./Login";
+import { useNavigate } from "react-router-dom";
 import { API_URL } from "../api/config";
 function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState('')
+  const navigate = useNavigate()
   return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-1 bg-slate-900 text-white">
       <h2>Register</h2>
