@@ -1,6 +1,7 @@
 # Study Task Manager
 
 A full-stack web application that helps students organize their study tasks, track completion, and manage deadlines. Built using the MERN stack.
+![Study Task Manager Dashboard](./images/dashboard.png)
 
 ## Live Demo
 
@@ -13,6 +14,16 @@ A full-stack web application that helps students organize their study tasks, tra
 Study Task Manager is a personal project built to practice full-stack web development. It allows users to create an account, log in, and manage their study tasks through a web interface.
 
 The project helped me understand how a React frontend communicates with an Express backend, how MongoDB stores application data, and how authentication protects user-specific resources.
+
+## Screenshots
+
+### Main Dashboard
+![Dashboard View](./images/dashboard.png)
+
+### User Authentication
+| Login Page | Registration Page |
+| :---: | :---: |
+| ![Login Page](./images/login.png) | ![Register Page](./images/register.png) |
 
 ## Features
 
