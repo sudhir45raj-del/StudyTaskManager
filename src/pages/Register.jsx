@@ -1,6 +1,7 @@
 import React from "react";
 import { useState } from "react";
 import Login from "./Login";
+import { API_URL } from "../api/config";
 function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +13,7 @@ function Register() {
       <form className="space-y-4 flex flex-col gap-2" onSubmit={async (e) => {
         e.preventDefault();
         try {
-          const response = await fetch('http://localhost:5000/api/auth/register', {
+          const response = await fetch('${API_URL}/auth/register', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
